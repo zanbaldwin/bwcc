@@ -2,6 +2,8 @@
 
 namespace App;
 
+use App\DependencyInjection\Compiler;
+use App\Model\RemoteEntityInterface;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\Config\Resource\FileResource;
@@ -23,6 +25,13 @@ class Kernel extends BaseKernel
                 yield new $class();
             }
         }
+    }
+
+    protected function build(ContainerBuilder $container)
+    {
+        $container->registerForAutoconfiguration(RemoteEntityInterface::class)->addTag(RemoteEntityInterface::class);
+        $container->addCompilerPass(new Compiler\RemoteEntitiesPass);
+        parent::build($container);
     }
 
     protected function configureContainer(ContainerBuilder $container, LoaderInterface $loader)

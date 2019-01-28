@@ -25,3 +25,8 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    App\OAuth\Xero:
+        arguments:
+            - { identifier: '%env(XERO_CONSUMER_KEY)%', secret: '%env(XERO_CONSUMER_SECRET)%' }
+    League\OAuth1\Client\Server\Server: '@App\OAuth\Xero'

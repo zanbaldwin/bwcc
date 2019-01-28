@@ -11,7 +11,6 @@ interface ApiServerInterface
 {
     public const BASE_URL = 'https://api.xero.com/api.xro/2.0/';
 
-    public function getCachedToken(): ?CredentialsInterface;
     public function generateTemporaryCredentials(): CredentialsInterface;
     public function getAuthorizationUrl(CredentialsInterface $temporary): string;
     public function exchangeAuthCodeForToken(

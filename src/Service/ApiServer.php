@@ -7,8 +7,6 @@ use GuzzleHttp\Psr7\Response;
 use League\OAuth1\Client\Credentials\CredentialsInterface;
 use League\OAuth1\Client\Credentials\TemporaryCredentials;
 use League\OAuth1\Client\Server\Server as OAuthServer;
-use Psr\SimpleCache\CacheInterface;
-use Psr\SimpleCache\InvalidArgumentException as CacheException;
 
 /**
  * Due to the nature of OAuth, the order in which the methods inside this class
@@ -19,32 +17,15 @@ use Psr\SimpleCache\InvalidArgumentException as CacheException;
  */
 class ApiServer implements ApiServerInterface
 {
-    protected const OAUTH_TOKEN_CACHE_KEY = 'api_oauth_token';
-    protected const OAUTH_TOKEN_CACHE_TTL = 'PT25M';
-
     /** @var \League\OAuth1\Client\Server\Server $oauth */
     private $oauth;
-    /** @var \Psr\SimpleCache\CacheInterface $cache */
-    private $cache;
     /** @var \GuzzleHttp\ClientInterface $guzzle */
     private $guzzle;
 
-    public function __construct(OAuthServer $oauth, CacheInterface $cache)
+    public function __construct(OAuthServer $oauth)
     {
         $this->oauth = $oauth;
-        $this->cache = $cache;
         $this->guzzle = $this->oauth->createHttpClient();
-    }
-
-    public function getCachedToken(): ?CredentialsInterface
-    {
-        try {
-            if ($this->cache->has(static::OAUTH_TOKEN_CACHE_KEY)) {
-                return $this->cache->get(static::OAUTH_TOKEN_CACHE_KEY);
-            }
-        } catch (CacheException $e) {
-        }
-        return null;
     }
 
     /**
@@ -67,16 +48,7 @@ class ApiServer implements ApiServerInterface
         TemporaryCredentials $temporary,
         string $authorizationCode
     ): CredentialsInterface {
-        $token = $this->oauth->getTokenCredentials($temporary, $temporary->getIdentifier(), $authorizationCode);
-        try {
-            $this->cache->set(static::OAUTH_TOKEN_CACHE_KEY, $token, new \DateInterval(static::OAUTH_TOKEN_CACHE_TTL));
-        } catch (CacheException $e) {
-            // Do nothing, we'll just have to re-authenticate on every run.
-        } catch (\Exception $e) {
-            // Shouldn't ever get here, but add a helpful message just in case.
-            throw new \RuntimeException('Internal value for token cache TTL is malformed.', 0, $e);
-        }
-        return $token;
+        return $this->oauth->getTokenCredentials($temporary, $temporary->getIdentifier(), $authorizationCode);
     }
 
     public function signRequest(Request $request, CredentialsInterface $token): Request

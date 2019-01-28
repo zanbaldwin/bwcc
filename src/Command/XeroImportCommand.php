@@ -30,17 +30,21 @@ class XeroImportCommand extends Command
     private $outputterFactory;
     /** @var \App\Model\RemoteEntityInterface[]|string[] $entities */
     private $entities;
+    /** @var string $projectDir */
+    private $projectDir;
 
     public function __construct(
         CachedApiServerInterface $api,
         CollectionFetcherInterface $fetcher,
         OutputterFactoryInterface $outputterFactory,
-        array $entities
+        array $entities,
+        string $projectDir
     ) {
         $this->api = $api;
         $this->fetcher = $fetcher;
         $this->outputterFactory = $outputterFactory;
         $this->entities = $entities;
+        $this->projectDir = $projectDir;
         parent::__construct();
     }
 
@@ -99,7 +103,7 @@ class XeroImportCommand extends Command
         );
         $io->success($successMessage);
         $io->table(['Files:'], \array_map(function (\SplFileInfo $file): array {
-            return [$file->getRealPath()];
+            return [$this->getRealPathInCaseOfContainer($file->getRealPath())];
         }, $files));
 
         return static::EXIT_SUCCESS;
@@ -123,5 +127,14 @@ class XeroImportCommand extends Command
         } catch (\Exception $e) {
             return null;
         }
+    }
+
+    private function getRealPathInCaseOfContainer(string $filepath): string
+    {
+        $hostMachineDir = \getenv('HOST_MACHINE_DIR');
+        if (\is_string($hostMachineDir) && $hostMachineDir !== '') {
+            return \str_replace($this->projectDir, $hostMachineDir, $filepath);
+        }
+        return $filepath;
     }
 }

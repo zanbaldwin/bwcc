@@ -33,7 +33,7 @@ command -v "${COMPOSE}" >/dev/null 2>&1 || {
 }
 
 DIR=$(dirname "$(readlink -f "$0")")
-PROJECTDIR="$(readlink -f -- "$(dirname "$(readlink -f "$0")")/..")"
+PROJECTDIR="$(readlink -f -- "${DIR}/..")"
 
 ################################################################################
 ### DETECTING COMPOSER BINARY AND CACHE DIRECTORIES                          ###
@@ -110,6 +110,6 @@ fi
 
 TERMINAL_SIZE="-e \"COLUMNS=${COLUMNS:-$(tput cols)}\" -e \"LINES=${LINES:-$(tput lines)}\""
 
-PHPENV="\"${COMPOSE}\" -f \"${CONFIG}\" run --rm --user=\"$(id -u):$(id -g)\" ${COMPOSER} -e \"COMPOSER_HOME=${COMPOSER_HOME}\" -e \"TERM=xterm\" ${TERMINAL_SIZE} \"${SERVICE}\" ${COMMAND}"
+PHPENV="\"${COMPOSE}\" -f \"${CONFIG}\" run --rm --user=\"$(id -u):$(id -g)\" ${COMPOSER} -e \"COMPOSER_HOME=${COMPOSER_HOME}\" -e \"HOST_MACHINE_DIR=${PROJECTDIR}\" -e \"TERM=xterm\" ${TERMINAL_SIZE} \"${SERVICE}\" ${COMMAND}"
 "${SHELL:-"sh"}" -c "${PHPENV}"
 exit $?

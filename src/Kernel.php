@@ -4,6 +4,7 @@ namespace App;
 
 use App\DependencyInjection\Compiler;
 use App\Model\RemoteEntityInterface;
+use App\Outputter\OutputterInterface;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\Config\Resource\FileResource;
@@ -31,6 +32,8 @@ class Kernel extends BaseKernel
     {
         $container->registerForAutoconfiguration(RemoteEntityInterface::class)->addTag(RemoteEntityInterface::class);
         $container->addCompilerPass(new Compiler\RemoteEntitiesPass);
+        $container->registerForAutoconfiguration(OutputterInterface::class)->addTag(OutputterInterface::class);
+        $container->addCompilerPass(new Compiler\OutputterFactoryPass);
         parent::build($container);
     }
 

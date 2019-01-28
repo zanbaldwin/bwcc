@@ -2,10 +2,11 @@
 
 namespace App\Factory;
 
+use App\Outputter\OutputterFactoryInterface;
 use App\Outputter\OutputterInterface;
 use Psr\Container\ContainerInterface;
 
-class OutputterFactory
+class OutputterFactory implements OutputterFactoryInterface
 {
     /** @var \Psr\Container\ContainerInterface $serviceLocator */
     private $serviceLocator;

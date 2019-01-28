@@ -15,7 +15,7 @@ services:
     # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/*'
-        exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
+        exclude: '../src/{DependencyInjection,Migrations,Tests,Kernel.php}'
 
     # controllers are imported separately to make sure services can be injected
     # as action arguments even if you don't extend any base controller class
@@ -30,3 +30,8 @@ services:
         arguments:
             - { identifier: '%env(XERO_CONSUMER_KEY)%', secret: '%env(XERO_CONSUMER_SECRET)%' }
     League\OAuth1\Client\Server\Server: '@App\OAuth\Xero'
+    App\Service\CollectionFetcherInterface: '@App\Service\ApiServer'
+
+    App\Command\XeroImportCommand:
+        arguments:
+            $entities: '%remote_entity_classes%'

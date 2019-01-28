@@ -27,4 +27,9 @@ class Collection extends ArrayCollection implements CollectionInterface
     {
         return $this->name;
     }
+
+    public function toArray(): array
+    {
+        return parent::toArray();
+    }
 }

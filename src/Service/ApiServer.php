@@ -45,7 +45,7 @@ class ApiServer implements ApiServerInterface, CollectionFetcherInterface
      * request to the API server which is a waste of resources if a token is
      * already saved in the cache.
      */
-    public function generateTemporaryCredentials(): CredentialsInterface
+    public function generateTemporaryCredentials(): TemporaryCredentials
     {
         return $this->oauth->getTemporaryCredentials();
     }

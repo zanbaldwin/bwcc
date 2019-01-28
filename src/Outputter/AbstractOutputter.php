@@ -41,7 +41,7 @@ abstract class AbstractOutputter implements OutputterInterface
     {
         $root = $this->getImportDirectoryRoot();
         do {
-            $directory = $root . '/' . \sha1(\microtime(true));
+            $directory = $root . '/' . \sha1(\microtime());
         } while (\file_exists($directory));
         if (!@\mkdir($directory, 0755, true)) {
             throw new \RuntimeException(\sprintf('Could not create import directory "%s" for writing.', $directory));

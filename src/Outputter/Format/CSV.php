@@ -36,7 +36,7 @@ class CSV extends AbstractOutputter
     {
         return \array_map(function ($data) {
             if (\is_array($data)) {
-                return $this->stringifyNestedData($data);
+                return \json_encode($data);
             }
             return $data;
         }, $data);

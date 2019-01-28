@@ -102,7 +102,7 @@ class ApiServer implements ApiServerInterface, CollectionFetcherInterface
             $response->getBody()->getContents(),
             'xml'
         ));
-        $collection = new Collection($entityClass);
+        $collection = new Collection([], $entityClass);
         foreach ($data as $entity) {
             $entity = $this->fixXmlDecodedTypes($entity);
             $entity = $this->denormalizer->denormalize($entity, $entityClass, 'xml');

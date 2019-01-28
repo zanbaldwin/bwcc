@@ -22,7 +22,7 @@ class JSON extends AbstractOutputter
                 $file->getRealPath(),
                 \json_encode($collection->map(function (EntityInterface $entity): array {
                     return $entity->getData();
-                }))
+                })->toArray())
             );
             $outputFiles[] = $file;
         }

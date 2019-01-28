@@ -10,21 +10,31 @@ class Collection extends ArrayCollection implements CollectionInterface
     /** @var string $name */
     private $name;
 
-    public function __construct(string $entityClass, array $elements = [])
+    public function __construct(array $elements = [], ?string $entityClass = null)
     {
-        if (!\is_a($entityClass, RemoteEntityInterface::class, true)) {
-            throw new \RuntimeException(\sprintf(
-                'Cannot create collection for non-remote entity type "%s".',
-                $entityClass
-            ));
+        if (\is_string($entityClass)) {
+            if (!\is_a($entityClass, RemoteEntityInterface::class, true)) {
+                throw new \RuntimeException(\sprintf(
+                    'Cannot create collection for non-remote entity type "%s".',
+                    $entityClass
+                ));
+            }
+            /** @var \App\Model\RemoteEntityInterface|string $entityClass */
+            $this->name = $entityClass::getCollectionName();
         }
-        /** @var \App\Model\RemoteEntityInterface|string $entityClass */
-        $this->name = $entityClass::getCollectionName();
         parent::__construct($elements);
     }
 
+    /**
+     * Doctrine will not pass the collection name when creating a new instance
+     * due to modification (for example, the map() method). Make sure to use the
+     * collection name as soon as possible.
+     */
     public function getCollectionName(): string
     {
+        if (!\is_string($this->name)) {
+            throw new \LogicException('Collection name not set, use before modification create new instance.');
+        }
         return $this->name;
     }
 

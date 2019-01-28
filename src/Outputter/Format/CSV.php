@@ -21,10 +21,24 @@ class CSV extends AbstractOutputter
             $file = $this->createFileHandle($collection->getCollectionName());
             $writer = Writer::createFromFileObject($file);
             $writer->insertAll($collection->map(function (EntityInterface $entity): array {
-                return $entity->getData();
+                return $this->stringifyNestedData($entity->getData());
             }));
             $outputFiles[] = $file;
         }
         return $outputFiles;
+    }
+
+    /**
+     * CSV encoding cannot handle nested data, encode into JSON so it can be
+     * processed by the consumer of what deals with this imported data.
+     */
+    private function stringifyNestedData(array $data): array
+    {
+        return \array_map(function ($data) {
+            if (\is_array($data)) {
+                return $this->stringifyNestedData($data);
+            }
+            return $data;
+        }, $data);
     }
 }

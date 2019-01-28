@@ -23,7 +23,7 @@ class YAML extends AbstractOutputter
                 $file->getRealPath(),
                 (new YamlDumper)->dump($collection->map(function (EntityInterface $entity): array {
                     return $entity->getData();
-                }))
+                })->toArray(), 5)
             );
             $outputFiles[] = $file;
         }

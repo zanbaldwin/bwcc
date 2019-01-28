@@ -1,6 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace App\Outputter;
+namespace App\Outputter\Format;
+
+use App\Outputter\AbstractOutputter;
 
 class SQLite extends AbstractOutputter
 {
@@ -9,7 +11,7 @@ class SQLite extends AbstractOutputter
         return 'sqlite';
     }
 
-    public function flushToDisk(): \SplFileObject
+    public function flushToDisk(): array
     {
     }
 }

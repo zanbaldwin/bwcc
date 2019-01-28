@@ -6,5 +6,5 @@ use Doctrine\Common\Collections\Collection;
 
 interface CollectionInterface extends Collection
 {
-    public function getEntityClass(): string;
+    public function getCollectionName(): string;
 }

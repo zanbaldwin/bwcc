@@ -8,5 +8,6 @@ interface OutputterInterface
 {
     public static function getFormat(): string;
     public function persistCollection(CollectionInterface $collection): void;
-    public function flushToDisk(): \SplFileObject;
+    /** @return \SplFileObject[] */
+    public function flushToDisk(): array;
 }

@@ -7,8 +7,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 class Collection extends ArrayCollection implements CollectionInterface
 {
-    /** @var string $entityClass */
-    private $entityClass;
+    /** @var string $name */
+    private $name;
 
     public function __construct(string $entityClass, array $elements = [])
     {
@@ -18,12 +18,13 @@ class Collection extends ArrayCollection implements CollectionInterface
                 $entityClass
             ));
         }
-        $this->entityClass = $entityClass;
+        /** @var \App\Model\RemoteEntityInterface|string $entityClass */
+        $this->name = $entityClass::getCollectionName();
         parent::__construct($elements);
     }
 
-    public function getEntityClass(): string
+    public function getCollectionName(): string
     {
-        return $this->entityClass;
+        return $this->name;
     }
 }

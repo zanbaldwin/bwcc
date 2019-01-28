@@ -1,0 +1,10 @@
+#!/bin/sh
+
+DIR=$(dirname "$(readlink -f "$0")")
+VARDIR="$(readlink -f -- "${DIR}/../var")"
+
+curl -L "https://getcomposer.org/installer" -o "${VARDIR}/composer-setup.php"
+# Use "--force" so that running this script again will overwrite any existing
+# file with the latest version.
+(cd "${VARDIR}" && php "${VARDIR}/composer-setup.php" --install-dir="../bin" --force)
+rm "${VARDIR}/composer-setup.php"

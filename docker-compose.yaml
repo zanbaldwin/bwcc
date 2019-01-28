@@ -1,0 +1,50 @@
+version: '3.6'
+
+x-logging:
+    &default-logging
+    driver: "json-file"
+    options:
+        max-size: "5m"
+        max-file: "1"
+
+services:
+
+    web:
+        image: 'zanbaldwin/xero-webserver'
+        build:
+            context: 'build/docker/web'
+            args: {}
+        restart: 'unless-stopped'
+        ports:
+            - '${APP_PORT:-2095}:80'
+        depends_on: [ 'php' ]
+        volumes:
+            - type: bind
+              source: './public'
+              target: '/srv/public'
+              read_only: true
+        logging: *default-logging
+
+    php:
+        image: 'zanbaldwin/xero-php'
+        build:
+            context: 'build/docker/php'
+            args: {}
+        restart: 'unless-stopped'
+        environment:
+            APP_ENV: 'prod'
+        user: "${UID:-1000}"
+        volumes:
+            - type: 'bind'
+              source: './'
+              target: '/srv'
+              read_only: false
+        logging: *default-logging
+
+networks:
+    default:
+        name: 'xeroimporter'
+        driver_opts:
+            com.docker.network.enable_ipv6: 'true'
+        ipam:
+            driver: default

@@ -1,0 +1,115 @@
+#!/bin/sh
+
+################################################################################
+### ENVIRONMENT HELPER                                                       ###
+### ------------------------------------------------------------------------ ###
+### Run this script to create a one-off container based on the PHP service   ###
+### for CLI work. It will auto-detect if you have Composer installed on your ###
+### host; if so it will mount Composer as a binary inside the container and  ###
+### also Composer's cache directory to reduce the amount of downloading      ###
+### required. Useful if you have differing PHP versions between host and     ###
+### container.                                                               ###
+################################################################################
+
+DOCKER="${DOCKER:-"docker"}"
+command -v "${DOCKER}" >/dev/null 2>&1 || {
+    echo >&2 "$(tput setaf 1)Docker Client \"${DOCKER}\" not available on \$PATH.$(tput sgr0)";
+    return 1;
+}
+
+INFO=$("${DOCKER}" info >/dev/null 2>&1)
+if [ $? -ne 0 ]; then
+    echo >&2 "$(tput setaf 1)Docker Daemon unavailable.$(tput sgr0)"
+    if [ "$(id -u 2>/dev/null)" -ne "0" ]; then
+        echo >&2 "$(tput setaf 1)Perhaps retry as root?$(tput sgr0)"
+    fi
+    return 1
+fi
+
+COMPOSE="${COMPOSE:-"docker-compose"}"
+command -v "${COMPOSE}" >/dev/null 2>&1 || {
+    echo >&2 "$(tput setaf 1)Docker Compose \"${COMPOSE}\" not available on \$PATH.$(tput sgr0)";
+    return 1;
+}
+
+DIR=$(dirname "$(readlink -f "$0")")
+PROJECTDIR="$(readlink -f -- "$(dirname "$(readlink -f "$0")")/..")"
+
+################################################################################
+### DETECTING COMPOSER BINARY AND CACHE DIRECTORIES                          ###
+### ------------------------------------------------------------------------ ###
+### The following is a little unweildy because it will:                      ###
+### - Attempt to detect the globally-installed Composer binary, but fallback ###
+###   onto a "composer.phar" file installed inside the "bin/" project        ###
+###   directory.                                                             ###
+### - Set appropriate "COMPOSER_HOME" env variable (falling back to a tmpfs  ###
+###   folder in case Composer doesn't exist so that the non-root user can    ###
+###   still create it if needed).                                            ###
+### - Figure out Composer's home (cache directory) and load it as a volume,  ###
+###   falling back to creating one inside the "var/" project directory if it ###
+###   can't find it.                                                         ###
+################################################################################
+
+COMPOSER=""
+# Use this default when no Composer binary is added, because without it set it
+# will try to create on the root filesystem which the non-root user cannot
+# create directories in.
+COMPOSER_HOME="/tmp/composer"
+# Set the default cache directory to be inside the "var/" project directory
+# (project-specific rather than global).
+COMPOSER_HOST_CACHE="${PROJECTDIR}/var/.composer"
+# Try global Composer file first, then try loading composer.phar from project.
+for COMPOSER_BINARY in "$(command -v composer 2>/dev/null)" "${PROJECTDIR}/bin/composer.phar"; do
+    if [ -f "${COMPOSER_BINARY}" ]; then
+        # Assuming that PHP is installed on the host machine, try determine
+        # Composer's global home (cache) directory.
+        COMPOSER_HOST_HOMEDIR="$(php "${COMPOSER_BINARY}" global config home 2>/dev/null)"
+        if [ $? -eq 0 ] && [ -d "${COMPOSER_HOST_HOMEDIR}" ]; then
+            COMPOSER_HOST_CACHE="${COMPOSER_HOST_HOMEDIR}"
+        elif [ ! -d "${COMPOSER_HOST_CACHE}" ]; then
+            # Create the cache directory now as the host machine user, rather
+            # than let Docker create the volume bind as the root user (because
+            # then permissions would be all out of whack).
+            echo "$(tput setaf 2)Creating Composer cache directory...$(tput sgr0)"
+            mkdir -p "${COMPOSER_HOST_CACHE}"
+        fi
+        COMPOSER_HOME="/.composer"
+        COMPOSER="--volume \"${COMPOSER_BINARY}:/bin/composer:ro\" --volume \"${COMPOSER_HOST_CACHE}:${COMPOSER_HOME}\""
+        # Hopefully at this point, the contents of the variable $COMPOSER should
+        # look something like:
+        #     --volume "/usr/local/bin/composer:/bin/composer:ro"
+        #     --volume "~/.config/composer:/.composer"
+        # Break from the loop (we don't want to overwrite the flag string we
+        # just constructed).
+        break
+    fi
+done
+
+# You can specify a different service defined in docker-compose.yaml by
+# prefixing the command with a variable, like:
+#     SERVICE=node bin/env npm i
+SERVICE="${SERVICE:-"php"}"
+COMPOSE_FILE="${COMPOSE_FILE:-"docker-compose.yaml"}"
+CONFIG="${PROJECTDIR}/${COMPOSE_FILE}"
+if [ ! -f "${CONFIG}" ]; then
+    echo >&2 "$(tput setaf 1)Docker Compose file \"${COMPOSE_FILE}\" not found.$(tput sgr0)"
+    return 1
+fi
+
+COMMAND="sh"
+# This little snippet wraps every command-line argument (after "bin/env") in
+# quotes so that arguments with spaces in them (such as `bin/env "My First
+# Argument"`) do not get turned into separate arguments (such as `bin/env "My"
+# "First" "Argument"`).
+if [ $# -gt 0 ]; then
+    COMMAND=""
+    for ARG in "$@"; do
+        COMMAND="${COMMAND} \"${ARG}\""
+    done
+fi
+
+TERMINAL_SIZE="-e \"COLUMNS=${COLUMNS:-$(tput cols)}\" -e \"LINES=${LINES:-$(tput lines)}\""
+
+PHPENV="\"${COMPOSE}\" -f \"${CONFIG}\" run --rm --user=\"$(id -u):$(id -g)\" ${COMPOSER} -e \"COMPOSER_HOME=${COMPOSER_HOME}\" -e \"TERM=xterm\" ${TERMINAL_SIZE} \"${SERVICE}\" ${COMMAND}"
+"${SHELL:-"sh"}" -c "${PHPENV}"
+exit $?

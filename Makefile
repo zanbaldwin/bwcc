@@ -13,6 +13,7 @@ usage:
 	@echo "   $(L)├─$(R) $(P)install$(R)           Install third-party packages (Composer dependecies)."
 	@echo "   $(L)├─$(R) $(P)run$(R)               Start the Docker containers to run the web application."
 	@echo "   $(L)╰─$(R) $(P)test$(R)              Run all of the following tests:"
+	@echo "      $(L)├─$(R) $(S)unit$(R)           • Run PHPUnit tests."
 	@echo "      $(L)╰─$(R) $(S)cs$(R)             • Run check PHP code for linting and syntax errors."
 	@echo ""
 	@echo "   $(L)╭$(R)                                                    $(L)╮$(R)"
@@ -32,6 +33,7 @@ vendor/autoload.php:
 	"$(MKDIR)/bin/docker" composer install
 
 # Commonly-used PHP Scripts
+vendor/bin/phpunit: vendor/autoload.php
 vendor/bin/phpcs: vendor/autoload.php
 
 # Shortcuts
@@ -40,10 +42,13 @@ build:
 install: vendor/autoload.php
 run: install
 	docker-compose up -d
-test: cs
+test: cs unit
 # Specific Types of Tests
+unit: vendor/bin/phpunit
+	[ -f "var/xdebug-filter.php" ] || "$(MKDIR)/bin/docker" vendor/bin/phpunit -c "tests/phpunit.xml" --dump-xdebug-filter "var/xdebug-filter.php"
+	"$(MKDIR)/bin/docker" vendor/bin/phpunit -c "tests/phpunit.xml" --prepend "var/xdebug-filter.php" --order-by=random --resolve-dependencies
 cs: vendor/bin/phpcs
 	"$(MKDIR)/bin/docker" vendor/bin/phpcs --standard="tests/phpcs.xml" src
 
-.PHONY: usage build install test cs
+.PHONY: usage build install test unit cs
 

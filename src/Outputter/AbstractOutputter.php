@@ -7,13 +7,15 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 abstract class AbstractOutputter implements OutputterInterface
 {
-    protected const IMPORT_DIRECTORY_ROOT = '%kernel.project_dir%/var/imports';
+    public const IMPORT_DIRECTORY_ROOT = '%kernel.project_dir%/var/imports';
 
-    /** @var string $importDirectory */
-    private $importDirectory;
+    /** @var string $importHash */
+    private $importHash;
 
     /** @var \Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface $parameterBag */
     private $parameterBag;
+
+    /** @var \App\Model\Collection\CollectionInterface[] $collections */
     protected $collections = [];
 
     public function persistCollection(CollectionInterface $collection): void
@@ -27,26 +29,26 @@ abstract class AbstractOutputter implements OutputterInterface
         $this->parameterBag = $parameterBag;
     }
 
-    protected function createFileHandle(string $collection, ?string $ext = null): \SplFileObject
+    protected function createFileHandle(string $collection, ?string $ext = null): OutputFile
     {
-        return new \SplFileObject(\sprintf(
-            '%s/%s.%s',
-            $this->importDirectory ?? $this->generateImportDirectory(),
-            $collection,
-            $ext ?? static::getFormat()
-        ), 'w+');
+        return new OutputFile(
+            $this->getImportDirectoryRoot(),
+            $this->importHash ?? $this->generateImportHashDirectory(),
+            $collection . '.' . ($ext ?? static::getFormat())
+        );
     }
 
-    protected function generateImportDirectory(): string
+    protected function generateImportHashDirectory(): string
     {
         $root = $this->getImportDirectoryRoot();
         do {
-            $directory = $root . '/' . \sha1(\microtime());
+            $importHash = \sha1(\microtime());
+            $directory = $root . '/' . $importHash;
         } while (\file_exists($directory));
         if (!@\mkdir($directory, 0755, true)) {
             throw new \RuntimeException(\sprintf('Could not create import directory "%s" for writing.', $directory));
         }
-        return $this->importDirectory = $directory;
+        return $this->importHash = $importHash;
     }
 
     private function getImportDirectoryRoot(): string

@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block subtitle %}
+    Success!
+{% endblock subtitle %}
+
+{% block body %}
+    <p><a class="btn btn-sm btn-secondary" href="{{ path('authorize') }}">&laquo; Back</a></p>
+    <p>The following files have been successfully imported from the Xero API:</p>
+    <ul>
+        {% for file in files %}
+            <li><a href="{{ path('download', { import: file.getImportHash(), file: file.getBasename() }) }}">{{ file.getBasename() }}</a></li>
+        {% endfor %}
+    </ul>
+{% endblock body %}

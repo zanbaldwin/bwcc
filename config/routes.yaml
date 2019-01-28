@@ -1,3 +1,14 @@
-#index:
-#    path: /
-#    controller: App\Controller\DefaultController::index
+authorize:
+    path: '/'
+    controller: 'App\Controller\ImportAction'
+    methods: [ 'GET' ]
+
+import:
+    path: '/'
+    controller: 'App\Controller\ImportAction'
+    methods: [ 'POST' ]
+
+download:
+    path: '/{import}/{file}'
+    controller: 'App\Controller\DownloadAction'
+    methods: [ 'GET' ]

@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+
+{% block subtitle %}
+    Authorization
+{% endblock subtitle %}
+
+{% block body %}
+
+    {% if app.session.flashbag.has('error') %}
+        <div class="alert alert-danger" role="alert">
+            <ul>
+                {% for flashMessage in app.session.flashbag.get('error') %}
+                    <li>{{ flashMessage }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <p>Please fetch an authorization code from <a href="{{ authUrl }}" target="_blank" rel="noopener noreferer">Xero's Developer Portal</a>.</p>
+    {{ form(form) }}
+{% endblock body %}

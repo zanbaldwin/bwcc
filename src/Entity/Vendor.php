@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Model\RemoteEntityInterface;
+use App\Service\ApiServerInterface;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\SerializedName;
 
@@ -64,7 +65,7 @@ class Vendor implements RemoteEntityInterface
 
     public static function getRemoteUrl(): string
     {
-        return API_BASE_URL . 'contacts';
+        return ApiServerInterface::BASE_URL . 'contacts';
     }
 
     public static function extract(array $data): array

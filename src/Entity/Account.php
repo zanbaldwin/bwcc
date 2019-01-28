@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Model\RemoteEntityInterface;
+use App\Service\ApiServerInterface;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\SerializedName;
 
@@ -106,7 +107,7 @@ class Account implements RemoteEntityInterface
 
     public static function getRemoteUrl(): string
     {
-        return API_BASE_URL . 'accounts';
+        return ApiServerInterface::BASE_URL . 'accounts';
     }
 
     public static function extract(array $data): array

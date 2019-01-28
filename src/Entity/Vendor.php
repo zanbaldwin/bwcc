@@ -3,11 +3,12 @@
 namespace App\Entity;
 
 use App\Model\RemoteEntityInterface;
+use App\Outputter\Format\SQLiteAwareInterface;
 use App\Service\ApiServerInterface;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\SerializedName;
 
-class Vendor implements RemoteEntityInterface
+class Vendor implements RemoteEntityInterface, SQLiteAwareInterface
 {
     /**
      * @SerializedName("ContactID")
@@ -202,6 +203,42 @@ class Vendor implements RemoteEntityInterface
             'supplier' => $this->supplier,
             'customer' => $this->customer,
             'attachments' => $this->attachments,
+        ];
+    }
+
+    /** @throws \PDOException */
+    public static function createTable(\PDO $pdo): void
+    {
+        $pdo->exec(\sprintf(
+            'CREATE TABLE `%s` (
+                `id` TEXT,
+                `status` TEXT,
+                `name` TEXT,
+                `addresses` TEXT,
+                `phones` TEXT,
+                `lastUpdated` TEXT,
+                `isSupplier` INTEGER,
+                `isCustomer` INTEGER,
+                `hasAttachments` INTEGER
+            );',
+            static::getCollectionName()
+        ));
+    }
+
+    public function getDatabaseColumns(\PDO $pdo): array
+    {
+        return [
+            'id' => $this->id instanceof UuidInterface ? $pdo->quote($this->id->toString()) : 'NULL',
+            'status' => $this->status !== null ? $pdo->quote($this->status) : 'NULL',
+            'name' => $this->name !== null ? $pdo->quote($this->name) : 'NULL',
+            'addresses' => $pdo->quote(\json_encode($this->addresses)),
+            'phones' => $pdo->quote(\json_encode($this->phones)),
+            'lastUpdated' => $this->lastUpdated instanceof \DateTimeInterface
+                ? $pdo->quote($this->lastUpdated->format(RFC3339))
+                : 'NULL',
+            'isSupplier' => $this->supplier ? '1' : '0',
+            'isCustomer' => $this->customer ? '1' : '0',
+            'hasAttachments' => $this->attachments ? '1' : '0',
         ];
     }
 }

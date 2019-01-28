@@ -3,11 +3,12 @@
 namespace App\Entity;
 
 use App\Model\RemoteEntityInterface;
+use App\Outputter\Format\SQLiteAwareInterface;
 use App\Service\ApiServerInterface;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\SerializedName;
 
-class Account implements RemoteEntityInterface
+class Account implements RemoteEntityInterface, SQLiteAwareInterface
 {
     /**
      * @SerializedName("AccountID")
@@ -303,6 +304,56 @@ class Account implements RemoteEntityInterface
             'lastUpdated' => $this->lastUpdated instanceof \DateTimeInterface
                 ? $this->lastUpdated->format(RFC3339)
                 : null,
+        ];
+    }
+
+    /** @throws \PDOException */
+    public static function createTable(\PDO $pdo): void
+    {
+        $pdo->exec(\sprintf(
+            'CREATE TABLE `%s` (
+                `id` TEXT,
+                `code` TEXT,
+                `name` TEXT,
+                `status` TEXT,
+                `type` TEXT,
+                `taxType` TEXT,
+                `class` TEXT,
+                `paymentsToAccountEnabled` INTEGER,
+                `inExpenseClaimsShown` INTEGER,
+                `bankAccountNumber` TEXT,
+                `bankAccountType` TEXT,
+                `currencyCode` TEXT,
+                `reportingCode` TEXT,
+                `reportingName` TEXT,
+                `hasAttachments` INTEGER,
+                `lastUpdated` TEXT  
+            );',
+            static::getCollectionName()
+        ));
+    }
+
+    public function getDatabaseColumns(\PDO $pdo): array
+    {
+        return [
+            'id' => $this->id instanceof UuidInterface ? $pdo->quote($this->id->toString()) : 'NULL',
+            'code' => $this->code !== null ? $pdo->quote($this->code) : 'NULL',
+            'name' => $this->name ? $pdo->quote($this->name) : 'NULL',
+            'status' => $this->status !== null ? $pdo->quote($this->status) : 'NULL',
+            'type' => $this->type !== null ? $pdo->quote($this->type) : 'NULL',
+            'taxType' => $this->taxType !== null ? $pdo->quote($this->taxType) : 'NULL',
+            'class' => $this->class !== null ? $pdo->quote($this->class) : 'NULL',
+            'paymentsToAccountEnabled' => $this->paymentsToAccountEnabled ? '1' : '0',
+            'inExpenseClaimsShown' => $this->inExpenseClaimsShown ? '1' : '0',
+            'bankAccountNumber' => $this->bankAccountNumber !== null ? $pdo->quote($this->bankAccountNumber) : 'NULL',
+            'bankAccountType' => $this->bankAccountType !== null ? $pdo->quote($this->bankAccountType) : 'NULL',
+            'currencyCode' => $this->currencyCode !== null ? $pdo->quote($this->currencyCode) : 'NULL',
+            'reportingCode' => $this->reportingCode !== null ? $pdo->quote($this->reportingCode) : 'NULL',
+            'reportingName' => $this->reportingName !== null ? $pdo->quote($this->reportingName) : 'NULL',
+            'hasAttachments' => $this->attachments ? '1' : '0',
+            'lastUpdated' => $this->lastUpdated instanceof \DateTimeInterface
+                ? $pdo->quote($this->lastUpdated->format(RFC3339))
+                : 'NULL',
         ];
     }
 }

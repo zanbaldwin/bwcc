@@ -7,6 +7,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 class Collection extends ArrayCollection implements CollectionInterface
 {
+    /** @var string $entityClass */
+    private $entityClass;
     /** @var string $name */
     private $name;
 
@@ -19,10 +21,19 @@ class Collection extends ArrayCollection implements CollectionInterface
                     $entityClass
                 ));
             }
+            $this->entityClass = $entityClass;
             /** @var \App\Model\RemoteEntityInterface|string $entityClass */
             $this->name = $entityClass::getCollectionName();
         }
         parent::__construct($elements);
+    }
+
+    public function getEntityClass(): string
+    {
+        if (!\is_string($this->name)) {
+            throw new \LogicException('Collection name not set, use before modification create new instance.');
+        }
+        return $this->entityClass;
     }
 
     /**

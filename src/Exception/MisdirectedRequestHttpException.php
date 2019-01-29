@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Exception;
 
@@ -7,8 +7,8 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 class MisdirectedRequestHttpException extends HttpException
 {
     public function __construct(
-        string $message = null,
-        \Exception $previous = null,
+        ?string $message = null,
+        ?\Exception $previous = null,
         int $code = 0,
         array $headers = array()
     ) {

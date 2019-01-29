@@ -27,7 +27,7 @@ class ImportType extends AbstractType
                 'required' => true,
                 'constraints' => [
                     new Assert\NotBlank,
-                    new Assert\Regex(['pattern' => '/^\d+$/'])
+                    new Assert\Regex(['pattern' => '/^\d+$/']),
                 ],
             ])
             ->add('format', Type\ChoiceType::class, [

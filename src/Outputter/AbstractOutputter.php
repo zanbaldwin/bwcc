@@ -29,6 +29,7 @@ abstract class AbstractOutputter implements OutputterInterface
         $this->parameterBag = $parameterBag;
     }
 
+    /** @throws \RuntimeException */
     protected function createFileHandle(string $collection, ?string $ext = null): OutputFile
     {
         return new OutputFile(

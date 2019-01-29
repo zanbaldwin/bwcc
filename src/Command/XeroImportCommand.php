@@ -5,13 +5,15 @@ namespace App\Command;
 use App\Outputter\OutputterFactoryInterface;
 use App\Service\CachedApiServerInterface;
 use App\Service\CollectionFetcherInterface;
+use GuzzleHttp\Exception\GuzzleException;
+use League\OAuth1\Client\Credentials\CredentialsException;
 use League\OAuth1\Client\Credentials\CredentialsInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\StyleInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Serializer\Exception\ExceptionInterface as SerializerException;
 
 class XeroImportCommand extends Command
 {
@@ -30,7 +32,7 @@ class XeroImportCommand extends Command
     private $outputterFactory;
     /** @var \App\Model\RemoteEntityInterface[]|string[] $entities */
     private $entities;
-    /** @var string $projectDir */
+    /** @var string|null $projectDir */
     private $projectDir;
 
     public function __construct(
@@ -38,7 +40,7 @@ class XeroImportCommand extends Command
         CollectionFetcherInterface $fetcher,
         OutputterFactoryInterface $outputterFactory,
         array $entities,
-        string $projectDir
+        ?string $projectDir = null
     ) {
         $this->api = $api;
         $this->fetcher = $fetcher;
@@ -59,7 +61,7 @@ class XeroImportCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         /** @var \Symfony\Component\Console\Output\ConsoleOutputInterface $output */
-        $io = new SymfonyStyle($input, $output->getErrorOutput());
+        $io = new SymfonyStyle($input, $output);
 
         try {
             $outputter = $this->outputterFactory->createForFormat($input->getArgument('format'));
@@ -81,18 +83,26 @@ class XeroImportCommand extends Command
                 $collection = $this->fetcher->fetchCollection($entity, $token);
                 $outputter->persistCollection($collection);
             }
-        } catch (\Symfony\Component\Serializer\Exception\ExceptionInterface $e) {
+        } catch (SerializerException $e) {
             $io->error('Error encountered while processing API response.');
             return static::EXIT_ERROR_INTERNAL;
-        } catch (\GuzzleHttp\Exception\GuzzleException $e) {
+        } catch (GuzzleException $e) {
             $io->error('Error encountered communicating with Xero API.');
             return static::EXIT_ERROR_EXTERNAL;
-        } catch (\Exception $e) {
+        } catch (\RuntimeException $e) {
+            $io->error('The Xero API did not return usable data.');
+            return static::EXIT_ERROR_EXTERNAL;
+        } catch (\Error $e) {
             $io->error('Unknown error occured.');
             return static::EXIT_ERROR_UNKNOWN;
         }
 
-        $files = $outputter->flushToDisk();
+        try {
+            $files = $outputter->flushToDisk();
+        } catch (\RuntimeException $e) {
+            $io->error('An error occurred persisting data to disk.');
+            return static::EXIT_ERROR_INTERNAL;
+        }
 
         $successMessage = \sprintf(
             'Entities (%s) from Xero API successfully saved to disk in the following files:',
@@ -109,7 +119,7 @@ class XeroImportCommand extends Command
         return static::EXIT_SUCCESS;
     }
 
-    private function authorize(StyleInterface $io): ?CredentialsInterface
+    private function authorize(SymfonyStyle $io): ?CredentialsInterface
     {
         if (null !== $token = $this->api->getCachedToken()) {
             return $token;
@@ -124,16 +134,18 @@ class XeroImportCommand extends Command
             ]);
             $authCode = $io->ask('Authorization Code:');
             return $this->api->exchangeAuthCodeForToken($temporary, $authCode);
-        } catch (\Exception $e) {
+        } catch (CredentialsException $e) {
             return null;
         }
     }
 
     private function getRealPathInCaseOfContainer(string $filepath): string
     {
-        $hostMachineDir = \getenv('HOST_MACHINE_DIR');
-        if (\is_string($hostMachineDir) && $hostMachineDir !== '') {
-            return \str_replace($this->projectDir, $hostMachineDir, $filepath);
+        if (\is_string($this->projectDir)) {
+            $hostMachineDir = \getenv('HOST_MACHINE_DIR');
+            if (\is_string($hostMachineDir) && $hostMachineDir !== '') {
+                return \str_replace($this->projectDir, $hostMachineDir, $filepath);
+            }
         }
         return $filepath;
     }

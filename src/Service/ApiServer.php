@@ -84,7 +84,10 @@ class ApiServer implements ApiServerInterface, CollectionFetcherInterface
         return $this->guzzle->send($request);
     }
 
-    /** @throws \GuzzleHttp\Exception\GuzzleException */
+    /**
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws \RuntimeException
+     */
     public function fetchCollection(string $entityClass, CredentialsInterface $token): CollectionInterface
     {
         if (!\is_a($entityClass, RemoteEntityInterface::class, true)) {

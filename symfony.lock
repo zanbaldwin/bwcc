@@ -35,6 +35,9 @@
     "league/oauth1-client": {
         "version": "1.7.0"
     },
+    "mikey179/vfsstream": {
+        "version": "v1.6.5"
+    },
     "mockery/mockery": {
         "version": "1.2.0"
     },

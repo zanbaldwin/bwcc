@@ -37,4 +37,8 @@ specifies the desired output format; currently accepted values are: `csv`, `json
 
 ### Considerations
 
-This application for the coding exercise works fine with the demo data that Xero provides, but may not be performant enough for larger sets of real-world data. A linearly-appended data format (such as CSV or a database) could be combined with XMLreader (`xml_parser_create`, `xml_set_element_parser`, etc) and generators to read, parse and write continuous streams without loading the entire API response into memory. That would likely be a sprint unto itself.
+This application for the coding exercise works fine with the demo data that Xero provides, but may not be performant
+enough for larger sets of real-world data. A linearly-appended data format (such as CSV or a database) could be combined
+with XMLreader (`xml_parser_create`, `xml_set_element_parser`, etc) and generators to read, parse and write continuous
+streams without loading the entire API response into memory (and the use of `StreamedResponse` to accompany). That would
+likely be a sprint unto itself.

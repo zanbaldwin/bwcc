@@ -27,19 +27,20 @@ MKDIR  := $(dir $(MKFILE))
 
 # Composer Dependencies
 vendor/autoload.php:
-	if [ "$$(which composer)" = "" ] && [ ! -f "bin/composer.phar" ]; then \
-	    "$(MKDIR)/bin/docker" bin/install-composer; \
-	fi
-	"$(MKDIR)/bin/docker" composer install
+
 
 # Commonly-used PHP Scripts
-vendor/bin/phpunit: vendor/autoload.php
-vendor/bin/phpcs: vendor/autoload.php
+vendor/bin/phpunit: install
+vendor/bin/phpcs: install
 
 # Shortcuts
 build:
 	docker-compose build --pull --force
-install: vendor/autoload.php
+install:
+	if [ "$$(which composer)" = "" ] && [ ! -f "bin/composer.phar" ]; then \
+	    "$(MKDIR)/bin/docker" bin/install-composer; \
+	fi
+	"$(MKDIR)/bin/docker" composer install
 run: install
 	docker-compose up -d
 test: cs unit

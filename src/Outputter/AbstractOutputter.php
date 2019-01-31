@@ -23,6 +23,11 @@ abstract class AbstractOutputter implements OutputterInterface
         $this->collections[] = $collection;
     }
 
+    protected function getCollections(): array
+    {
+        return $this->collections;
+    }
+
     /** @required */
     public function setParameterBag(ParameterBagInterface $parameterBag): void
     {
@@ -47,6 +52,7 @@ abstract class AbstractOutputter implements OutputterInterface
             $directory = $root . '/' . $importHash;
         } while (\file_exists($directory));
         if (!@\mkdir($directory, 0755, true)) {
+            // This exception should never be reached as we've already checked that the root directory is writable.
             throw new \RuntimeException(\sprintf('Could not create import directory "%s" for writing.', $directory));
         }
         return $this->importHash = $importHash;
@@ -56,9 +62,12 @@ abstract class AbstractOutputter implements OutputterInterface
     {
         $directory = $this->parameterBag->resolveValue(static::IMPORT_DIRECTORY_ROOT);
         if (\file_exists($directory) && (!\is_dir($directory) || !\is_writable($directory))) {
-            throw new \RuntimeException('Import directory "%s" is not a writable directory.');
+            throw new \RuntimeException(\sprintf('Import directory "%s" is not a writable directory.', $directory));
         } elseif (!\file_exists($directory) && !@\mkdir($directory, 0755, true)) {
-            throw new \RuntimeException('Could not create root import directory "%s" for writing.');
+            throw new \RuntimeException(\sprintf(
+                'Could not create root import directory "%s" for writing.',
+                $directory
+            ));
         }
         return \rtrim($directory, '/');
     }

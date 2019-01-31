@@ -31,7 +31,7 @@ class Collection extends ArrayCollection implements CollectionInterface
     public function getEntityClass(): string
     {
         if (!\is_string($this->name)) {
-            throw new \LogicException('Collection name not set, use before modification create new instance.');
+            throw new \LogicException('Entity class not set, use before modification creates new instance.');
         }
         return $this->entityClass;
     }
@@ -44,7 +44,7 @@ class Collection extends ArrayCollection implements CollectionInterface
     public function getCollectionName(): string
     {
         if (!\is_string($this->name)) {
-            throw new \LogicException('Collection name not set, use before modification create new instance.');
+            throw new \LogicException('Collection name not set, use before modification creates new instance.');
         }
         return $this->name;
     }

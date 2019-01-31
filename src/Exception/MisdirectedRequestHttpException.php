@@ -4,6 +4,7 @@ namespace App\Exception;
 
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
+/** @codeCoverageIgnore */
 class MisdirectedRequestHttpException extends HttpException
 {
     public function __construct(

@@ -6,6 +6,7 @@ use League\OAuth1\Client\Credentials\TokenCredentials;
 use League\OAuth1\Client\Server\Server as OAuthServer;
 use League\OAuth1\Client\Server\User;
 
+/** @codeCoverageIgnore */
 class Xero extends OAuthServer
 {
     public function urlTemporaryCredentials(): string

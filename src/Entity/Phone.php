@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Model\EntityInterface;
 use Symfony\Component\Serializer\Annotation\SerializedName;
 
+/** @codeCoverageIgnore */
 class Phone implements EntityInterface
 {
     /**

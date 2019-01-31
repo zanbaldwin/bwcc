@@ -13,10 +13,10 @@ class UuidNormalizer implements NormalizerInterface, DenormalizerInterface
     /** {@inheritdoc} */
     public function normalize($object, $format = null, array $context = []): string
     {
-        if (!$object instanceof UuidInterface || !\method_exists($object, '__toString')) {
+        if (!$object instanceof UuidInterface) {
             throw new Exception\InvalidArgumentException('Cannot normalize a non-UUID object into a string.');
         }
-        return (string) $object;
+        return $object->toString();
     }
 
     /** {@inheritdoc} */
@@ -31,8 +31,27 @@ class UuidNormalizer implements NormalizerInterface, DenormalizerInterface
         if (!\is_string($data)) {
             throw new Exception\InvalidArgumentException('UUID objects can only be constructed from strings.');
         }
+        if ($class === UuidInterface::class) {
+            $class = Uuid::class;
+        }
+        if (!\class_exists($class)) {
+            throw new Exception\RuntimeException(\sprintf('Target denormalization type "%s" does not exist.', $class));
+        }
+        if (!\is_a($class, UuidInterface::class, true)) {
+            throw new Exception\RuntimeException(\sprintf(
+                'Target denormalization type "%s" does not implement "%s".',
+                $class,
+                UuidInterface::class
+            ));
+        }
+        if (!\method_exists($class, 'fromString') || !\is_callable([$class, 'fromString'])) {
+            throw new Exception\RuntimeException(\sprintf(
+                'Target denormalization type "%s" does not publicly implement "fromString" method.',
+                $class
+            ));
+        }
         try {
-            return Uuid::fromString($data);
+            return $class::fromString($data);
         } catch (\Ramsey\Uuid\Exception\InvalidUuidStringException $e) {
             throw new Exception\UnexpectedValueException('Value provided is not a valid UUID.', 0, $e);
         }

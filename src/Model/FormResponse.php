@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+/** @codeCoverageIgnore */
 class FormResponse
 {
     /**

@@ -16,10 +16,10 @@ class JSON extends AbstractOutputter
     {
         $outputFiles = [];
         /** @var \App\Model\Collection\CollectionInterface $collection */
-        foreach ($this->collections as $collection) {
+        foreach ($this->getCollections() as $collection) {
             $file = $this->createFileHandle($collection->getCollectionName());
             \file_put_contents(
-                $file->getRealPath(),
+                $file->getPathname(),
                 \json_encode($collection->map(function (EntityInterface $entity): array {
                     return $entity->getData();
                 })->toArray())

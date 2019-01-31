@@ -8,6 +8,7 @@ use App\Service\ApiServerInterface;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\SerializedName;
 
+/** @codeCoverageIgnore */
 class Account implements RemoteEntityInterface, SQLiteAwareInterface
 {
     /**
